@@ -157,12 +157,15 @@ function writeAtomic(file, text) {
  * single command honest instead of telling the user to install a package manager first.
  */
 function runPnpm(cwd, args) {
-  const direct = spawnSync('pnpm', ['--version'], { shell: true, windowsHide: true, stdio: 'ignore' })
+  const direct = spawnSync('pnpm --version', { shell: true, windowsHide: true, stdio: 'ignore' })
   const useNpx = direct.error !== undefined || direct.status !== 0
-  const command = useNpx ? 'npx' : 'pnpm'
-  const argv = useNpx ? ['--yes', PNPM_FALLBACK].concat(args) : args
+  const parts = (useNpx ? ['npx', '--yes', PNPM_FALLBACK] : ['pnpm']).concat(args)
   if (useNpx) write('  pnpm 不在 PATH 上，改用 npx ' + PNPM_FALLBACK)
-  const result = spawnSync(command, argv, {
+  // One command string rather than an argument array: with `shell: true` Node only concatenates
+  // arguments, and warns about it (DEP0190). Every part is space-free by construction — the spec
+  // is either `<name>@<version>` or rejected by the guard in install() — so joining is safe and
+  // the install output stays clean.
+  const result = spawnSync(parts.join(' '), {
     cwd,
     stdio: 'inherit',
     shell: true,
