@@ -1,6 +1,6 @@
 {
   "name": "dsh-plugin-qq-bridge",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "把 QQ 里某个联系人（或群）的消息转发进某条 DSH 会话，作为用户输入；再把这条会话的回复发回 QQ。每条会话各自关联自己的联系人，群聊默认只在被 @ 时回复。",
   "type": "module",
   "main": "index.js",
