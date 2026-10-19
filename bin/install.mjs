@@ -41,7 +41,7 @@ const HERE = path.dirname(fileURLToPath(import.meta.url))
 const SELF = JSON.parse(fs.readFileSync(path.join(HERE, '..', 'package.json'), 'utf8'))
 const PACKAGE_NAME = SELF.name
 const DESKTOP_PROFILE = 'desktop'
-const PNPM_FALLBACK = 'pnpm@10'
+const PNPM_DEFAULT_MAJOR = '11'
 
 const write = (line) => process.stdout.write(line + '\n')
 
@@ -146,6 +146,33 @@ function writeAtomic(file, text) {
 /* ------------------------------------------------------------------ package manager */
 
 /**
+ * Which pnpm major the profile was installed with.
+ *
+ * This is not cosmetic. pnpm keeps one store per major (`store/v11`, `store/v10`, …), and mixing
+ * them fails hard:
+ *
+ *     ERR_PNPM_UNEXPECTED_STORE  The dependencies are currently linked from the store at
+ *     ...\store\v11, pnpm now wants to use the store at ...\store\v10
+ *
+ * `.modules.yaml` is written by pnpm at install time and records both the exact package manager
+ * and the store it linked from, so it is the reliable source. A fresh profile has no such file —
+ * then any reasonably current pnpm is fine.
+ */
+function profilePnpmMajor(profilePath) {
+  const file = path.join(profilePath, 'node_modules', '.modules.yaml')
+  let text
+  try {
+    text = fs.readFileSync(file, 'utf8')
+  } catch {
+    return undefined
+  }
+  const byPackageManager = /packageManager:\s*"?pnpm@(\d+)\./.exec(text)
+  if (byPackageManager !== null) return byPackageManager[1]
+  const byStore = /storeDir:.*?[\\/]v(\d+)/.exec(text)
+  return byStore === null ? undefined : byStore[1]
+}
+
+/**
  * Run pnpm here.
  *
  * `shell: true` is required on Windows — pnpm is a `.cmd` shim, and Node refuses to execute one
@@ -153,19 +180,32 @@ function writeAtomic(file, text) {
  * instead of quoting them, so any spec containing a space would be re-split by the shell; the only
  * such spec is a local directory path, and `install()` refuses that before reaching here.
  *
- * pnpm is not always on PATH (DSH Desktop bundles its own). Falling back to `npx pnpm` keeps the
- * single command honest instead of telling the user to install a package manager first.
+ * pnpm is not always on PATH (DSH Desktop bundles its own), and the copy on PATH can be a
+ * different major than the one that built this profile. Either case is handled by running the
+ * requested major through npx, so the store always matches.
  */
-function runPnpm(cwd, args) {
-  const direct = spawnSync('pnpm --version', { shell: true, windowsHide: true, stdio: 'ignore' })
-  const useNpx = direct.error !== undefined || direct.status !== 0
-  const parts = (useNpx ? ['npx', '--yes', PNPM_FALLBACK] : ['pnpm']).concat(args)
-  if (useNpx) write('  pnpm 不在 PATH 上，改用 npx ' + PNPM_FALLBACK)
+function runPnpm(cwd, args, wantedMajor) {
+  const probe = spawnSync('pnpm --version', { shell: true, windowsHide: true, encoding: 'utf8' })
+  const haveVersion = probe.status === 0 && typeof probe.stdout === 'string' ? probe.stdout.trim() : ''
+  const haveMajor = /^(\d+)\./.exec(haveVersion)
+  const wanted = wantedMajor === undefined ? PNPM_DEFAULT_MAJOR : wantedMajor
+  const usable = haveMajor !== null && (wantedMajor === undefined || haveMajor[1] === wantedMajor)
+
+  const parts = usable ? ['pnpm'] : ['npx', '--yes', 'pnpm@' + wanted]
+  if (!usable) {
+    write(
+      haveVersion === ''
+        ? '  pnpm 不在 PATH 上，改用 npx pnpm@' + wanted
+        : '  PATH 上的 pnpm ' + haveVersion + ' 与 profile 使用的 pnpm@' + wanted
+            + ' 不同（store 会冲突），改用 npx pnpm@' + wanted,
+    )
+  }
+
   // One command string rather than an argument array: with `shell: true` Node only concatenates
   // arguments, and warns about it (DEP0190). Every part is space-free by construction — the spec
   // is either `<name>@<version>` or rejected by the guard in install() — so joining is safe and
   // the install output stays clean.
-  const result = spawnSync(parts.join(' '), {
+  const result = spawnSync(parts.concat(args).join(' '), {
     cwd,
     stdio: 'inherit',
     shell: true,
@@ -298,8 +338,9 @@ function install(options) {
   rollback.capture(manifestPath)
   rollback.capture(lockPath)
 
+  const wantedPnpm = profilePnpmMajor(profilePath)
   write(alreadyInstalled ? '  包已存在，刷新到 ' + SELF.version : '  正在安装...')
-  const status = runPnpm(profilePath, ['add', spec, '--config.minimumReleaseAge=0'])
+  const status = runPnpm(profilePath, ['add', spec, '--config.minimumReleaseAge=0'], wantedPnpm)
   if (status !== 0) {
     rollback.restore()
     fail('pnpm 退出码 ' + status + '。profile 文件已还原，什么都没变。')
@@ -343,7 +384,7 @@ function uninstall(options) {
     fail('无法更新 dsh.profile.bundles：' + String(error))
   }
 
-  const status = runPnpm(profilePath, ['remove', PACKAGE_NAME])
+  const status = runPnpm(profilePath, ['remove', PACKAGE_NAME], profilePnpmMajor(profilePath))
   if (status !== 0) {
     write('  注意：pnpm remove 退出码 ' + status + '，包可能还在，但已不在 dsh.profile.bundles 里，不会再加载。')
   }
