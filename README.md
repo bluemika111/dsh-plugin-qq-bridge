@@ -12,19 +12,31 @@
 
 ## 安装
 
-**方式一：在 DSH 里直接装（推荐）**
+**方式一：一行命令（推荐）**
 
-打开左侧 **插件** 页 → **安装 bundle**，target 填包名：
-
-```
-dsh-plugin-qq-bridge
+```bash
+npx --yes dsh-plugin-qq-bridge@latest install
 ```
 
+它会自己完成三件事：找到 profile 目录（默认 `desktop`）→ 在里面装好这个包 → 把插件写进 `dsh.profile.bundles`。
+装完提示你重启 DSH。
+
+```bash
+npx --yes dsh-plugin-qq-bridge@latest install --profile web   # 装进别的 profile
+npx --yes dsh-plugin-qq-bridge@latest install --dry-run       # 只看要做什么，不改文件
+npx --yes dsh-plugin-qq-bridge@latest uninstall               # 卸载
+```
+
+它对 profile 文件的每次写入都带快照，任一步失败会整体回滚，不会留下启动不了的半成品。
+
+**方式二：在 DSH 界面里装**
+
+打开左侧 **插件** 页 → **安装 bundle**，target 填包名 `dsh-plugin-qq-bridge`。
 也可以直接跟 agent 说「装一下 dsh-plugin-qq-bridge」——它调用的正是 DSH 内置的 `plugin_manager` 工具。
 
 > ⚠️ `plugin_manager` 是 **DSH 内部的工具，不是 shell 命令**。在 PowerShell / 终端里敲它会提示「无法将 plugin_manager 项识别为 cmdlet」。
 
-**方式二：先 npm i，再让 DSH 装本地目录**
+**方式三：先 npm i，再让 DSH 装本地目录**
 
 ```bash
 npm i dsh-plugin-qq-bridge
@@ -32,7 +44,7 @@ npm i dsh-plugin-qq-bridge
 
 然后在 **插件** 页安装 bundle 时，target 填 `node_modules/dsh-plugin-qq-bridge` 的绝对路径。
 
-**方式三：不经过 npm，直接用 GitHub 的源码包**
+**方式四：不经过 npm，直接用 GitHub 的源码包**
 
 ```bash
 npm i https://codeload.github.com/bluemika111/dsh-plugin-qq-bridge/tar.gz/refs/heads/main
