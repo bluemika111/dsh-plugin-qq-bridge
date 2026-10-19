@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="QQ bridge">
+  <rect x="6" y="10" width="52" height="36" rx="10" fill="#12b7f5"/>
+  <path d="M20 46 L28 46 L22 56 Z" fill="#12b7f5"/>
+  <circle cx="24" cy="29" r="4.4" fill="#ffffff"/>
+  <circle cx="40" cy="29" r="4.4" fill="#ffffff"/>
+  <path d="M22 36 q10 8 20 0" stroke="#ffffff" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+</svg>

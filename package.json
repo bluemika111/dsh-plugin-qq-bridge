@@ -1,0 +1,67 @@
+{
+  "name": "dsh-plugin-qq-bridge",
+  "version": "1.0.0",
+  "description": "把 QQ 里某个联系人（或群）的消息转发进某条 DSH 会话，作为用户输入；再把这条会话的回复发回 QQ。每条会话各自关联自己的联系人，群聊默认只在被 @ 时回复。",
+  "type": "module",
+  "main": "index.js",
+  "icon": "./icon.svg",
+  "exports": {
+    ".": "./index.js",
+    "./client": {
+      "default": "./client.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "icon.svg",
+    "README.md",
+    "LICENSE",
+    "test"
+  ],
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "dsh-plugin",
+    "qq",
+    "onebot",
+    "onebot11",
+    "napcat",
+    "snowluma",
+    "bridge"
+  ],
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "author": "bluemika111",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bluemika111/dsh-plugin-qq-bridge.git"
+  },
+  "homepage": "https://github.com/bluemika111/dsh-plugin-qq-bridge#readme",
+  "bugs": {
+    "url": "https://github.com/bluemika111/dsh-plugin-qq-bridge/issues"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-conversation"
+      ]
+    }
+  },
+  "meta": {
+    "title": "QQ 桥接",
+    "description": "把 QQ 联系人/群的消息作为用户输入转发进会话，并把回复发回 QQ；每个会话单独关联，群聊默认仅被 @ 时回复。"
+  },
+  "scripts": {
+    "test": "node test/parsing.test.mjs && node test/bridge.test.mjs"
+  },
+  "license": "MIT"
+}
