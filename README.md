@@ -12,29 +12,37 @@
 
 ## 安装
 
-**方式一：在 DSH 里装（推荐）**
+**方式一：在 DSH 里直接装（推荐）**
+
+打开左侧 **插件** 页 → **安装 bundle**，target 填包名：
 
 ```
-plugin_manager  action=install_bundle  target=dsh-plugin-qq-bridge
+dsh-plugin-qq-bridge
 ```
 
-装完**重启一次 DSH**——Host 半边不会热替换。重启后每条会话的输入框下方会出现一行 `QQ …`。
+也可以直接跟 agent 说「装一下 dsh-plugin-qq-bridge」——它调用的正是 DSH 内置的 `plugin_manager` 工具。
 
-**方式二：从 npm 装**
+> ⚠️ `plugin_manager` 是 **DSH 内部的工具，不是 shell 命令**。在 PowerShell / 终端里敲它会提示「无法将 plugin_manager 项识别为 cmdlet」。
+
+**方式二：先 npm i，再让 DSH 装本地目录**
 
 ```bash
 npm i dsh-plugin-qq-bridge
 ```
 
-装好后同样用 `plugin_manager install_bundle`，target 填它的绝对目录。
+然后在 **插件** 页安装 bundle 时，target 填 `node_modules/dsh-plugin-qq-bridge` 的绝对路径。
 
-**方式三：不经过 npm，直接从 GitHub 装**
+**方式三：不经过 npm，直接用 GitHub 的源码包**
 
 ```bash
-pnpm add https://codeload.github.com/bluemika111/dsh-plugin-qq-bridge/tar.gz/refs/heads/main
+npm i https://codeload.github.com/bluemika111/dsh-plugin-qq-bridge/tar.gz/refs/heads/main
 ```
 
-得到一个目录后，用 `plugin_manager install_bundle` 指过去（target 填绝对路径），再重启 DSH。
+同样把得到的目录绝对路径填进 **安装 bundle**。
+
+> 若 Windows 报 `EPERM ... rename`：通常是 `node_modules\dsh-plugin-qq-bridge` 还残留着上一次的链接目录、且被进程占用。删掉那个目录（不是工作区里的源码）再重试即可。
+
+装完**重启一次 DSH**——Host 半边不会热替换。重启后每条会话的输入框下方会出现一行 `QQ …`。
 
 装好后还需要两步才能收消息：**在协议端开一条正向 WebSocket**，**在会话面板里填地址和联系人**。
 详见下面两节。
