@@ -1,10 +1,43 @@
 # QQ 桥接 · dsh-plugin-qq-bridge
 
+[![npm version](https://img.shields.io/npm/v/dsh-plugin-qq-bridge.svg)](https://www.npmjs.com/package/dsh-plugin-qq-bridge)
+[![license](https://img.shields.io/npm/l/dsh-plugin-qq-bridge.svg)](LICENSE)
+[![node](https://img.shields.io/node/v/dsh-plugin-qq-bridge.svg)](package.json)
+
 把 QQ 里某个联系人（或某个群）的消息，作为**用户输入**转发进一条 DSH 会话；等这条会话回复完，
 再把助手的话发回 QQ。
 
 关联是**按会话**的：会话 A 可以接张三的私聊，会话 B 接一个群，互不影响；两个会话也可以刻意
 接同一个人。
+
+## 安装
+
+**方式一：在 DSH 里装（推荐）**
+
+```
+plugin_manager  action=install_bundle  target=dsh-plugin-qq-bridge
+```
+
+装完**重启一次 DSH**——Host 半边不会热替换。重启后每条会话的输入框下方会出现一行 `QQ …`。
+
+**方式二：从 npm 装**
+
+```bash
+npm i dsh-plugin-qq-bridge
+```
+
+装好后同样用 `plugin_manager install_bundle`，target 填它的绝对目录。
+
+**方式三：不经过 npm，直接从 GitHub 装**
+
+```bash
+pnpm add https://codeload.github.com/bluemika111/dsh-plugin-qq-bridge/tar.gz/refs/heads/main
+```
+
+得到一个目录后，用 `plugin_manager install_bundle` 指过去（target 填绝对路径），再重启 DSH。
+
+装好后还需要两步才能收消息：**在协议端开一条正向 WebSocket**，**在会话面板里填地址和联系人**。
+详见下面两节。
 
 ## 依赖
 
